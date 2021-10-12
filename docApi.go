@@ -1,6 +1,7 @@
 package doc
 
 import (
+	"go/ast"
 	"regexp"
 	"strings"
 
@@ -30,8 +31,8 @@ type DocApi struct {
 	Tag         []string     `json:"tag"`
 	Accept      []string     `json:"accept"`
 	Header      []*DocHeader `json:"header"`
-	Rest        *DocStruct   `json:"rest"`
-	Body        *DocStruct   `json:"body"`
+	Rest        *TypeSpec    `json:"rest"`
+	Body        *TypeSpec    `json:"body"`
 	Success     []*DocRet    `json:"success"`
 	Fail        []*DocRet    `json:"fail"`
 	pkg         *Pkg         `json:"-"`
@@ -46,7 +47,7 @@ type DocHeader struct {
 type DocRet struct {
 	Code  int16
 	Key   string
-	Value *DocStruct
+	Value *TypeSpec
 }
 
 func (doc *DocApi) ParseComment(comment string) bool {
@@ -99,33 +100,6 @@ func (doc *DocApi) ParseComment(comment string) bool {
 	return false
 }
 
-func (doc *DocApi) parseDocStruct(s string) *DocStruct {
-
-	strus := stringify.ToStringSlice(s, ".")
-	var stru Struct
-	for k, name := range strus {
-		if k == 0 {
-			stru = doc.pkg.GetStru(name)
-			if stru == nil {
-				stru = doc.pkg.GetPkg(name)
-				if stru == nil {
-					return nil
-				}
-				continue
-			}
-		}
-		stru = stru.GetStru(name)
-		if stru == nil {
-			return nil
-		}
-	}
-
-	if docStruct, ok := stru.(*DocStruct); ok {
-		return docStruct
-	}
-	return nil
-}
-
 func (doc *DocApi) ParseSuccess(s []string) bool {
 	if len(s) < 2 {
 		return false
@@ -137,7 +111,7 @@ func (doc *DocApi) ParseSuccess(s []string) bool {
 		s[0] = "200"
 	}
 
-	stru := doc.parseDocStruct(s[2])
+	stru := parseTypeType(s[2], doc.pkg)
 	if stru == nil {
 		return false
 	}
@@ -166,7 +140,7 @@ func (doc *DocApi) ParseFail(s []string) bool {
 		s[0] = "200"
 	}
 
-	stru := doc.parseDocStruct(s[2])
+	stru := parseTypeType(s[2], doc.pkg)
 	if stru == nil {
 		return false
 	}
@@ -188,7 +162,7 @@ func (doc *DocApi) ParseBody(s []string) bool {
 	if len(s) == 0 {
 		return false
 	}
-	doc.Body = doc.parseDocStruct(s[0])
+	doc.Body = parseTypeType(s[0], doc.pkg)
 	if doc.Body == nil {
 		return false
 	}
@@ -199,7 +173,7 @@ func (doc *DocApi) ParseRest(s []string) bool {
 	if len(s) == 0 {
 		return false
 	}
-	doc.Rest = doc.parseDocStruct(s[0])
+	doc.Rest = parseTypeType(s[0], doc.pkg)
 	if doc.Rest == nil {
 		return false
 	}
@@ -238,9 +212,7 @@ func (doc *DocApi) ParseAccept(s []string) bool {
 		return false
 	}
 
-	if doc.Accept == nil {
-		doc.Accept = make([]string, 0)
-	}
+	doc.Accept = make([]string, 0)
 	for _, s := range s {
 		for _, s := range stringify.ToStringSlice(s) {
 			doc.Accept = append(doc.Accept, s)
@@ -272,10 +244,7 @@ func (doc *DocApi) ParseMethod(s []string) bool {
 		return false
 	}
 
-	if doc.Method == nil {
-		doc.Method = make([]string, 0)
-	}
-
+	doc.Method = make([]string, 0)
 	for _, s := range s {
 		for _, s := range stringify.ToStringSlice(s) {
 			doc.Method = append(doc.Method, s)
@@ -324,7 +293,11 @@ func (doc *DocApi) ParseCategory(s []string) bool {
 	return false
 }
 
-func NewDocApi(comments []string, pkg *Pkg) *DocApi {
+func NewDocApi(comments *ast.CommentGroup, pkg *Pkg) *DocApi {
+	if comments == nil {
+		return nil
+	}
+
 	doc := &DocApi{
 		Accept: []string{"json"},
 		Method: []string{"post"},
@@ -332,9 +305,8 @@ func NewDocApi(comments []string, pkg *Pkg) *DocApi {
 		pkg:    pkg,
 	}
 
-	for _, v := range comments {
-		doc.ParseComment(v)
+	for _, v := range comments.List {
+		doc.ParseComment(v.Text)
 	}
-
 	return doc
 }

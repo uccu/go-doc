@@ -2,6 +2,7 @@ package doc
 
 import (
 	"errors"
+	"go/ast"
 	"strings"
 
 	"golang.org/x/tools/go/packages"
@@ -17,7 +18,7 @@ type Pkg struct {
 	Name string
 	pkg  *packages.Package
 	pkgs map[string]*Pkg
-	stru map[string]*DocStruct
+	stru map[string]*TypeSpec
 }
 
 func GetPkg(dir string) *Pkg {
@@ -70,14 +71,24 @@ func (pkg *Pkg) SetStru() *Pkg {
 		return pkg
 	}
 
-	//todo
+	pkg.stru = make(map[string]*TypeSpec)
+	for _, f := range pkg.pkg.Syntax {
+		for _, p := range f.Scope.Objects {
+			if p.Kind != ast.Typ {
+				continue
+			}
+			typeSpec, _ := p.Decl.(*ast.TypeSpec)
+			pkg.stru[typeSpec.Name.Name] = ParseTypeSpec(typeSpec, pkg)
+		}
+	}
 	return pkg
 }
 
-func (pkg *Pkg) GetStru(name string) *DocStruct {
+func (pkg *Pkg) GetStru(name string) *TypeSpec {
 	s, ok := pkg.SetStru().stru[name]
 	if !ok {
 		return nil
 	}
+	s.Name = name
 	return s
 }
