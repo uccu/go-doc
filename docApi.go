@@ -27,14 +27,14 @@ type DocApi struct {
 	Category    string       `json:"category"`
 	Router      string       `json:"router"`
 	Type        string       `json:"type"`
-	Method      []string     `json:"method"`
-	Tag         []string     `json:"tag"`
-	Accept      []string     `json:"accept"`
-	Header      []*DocHeader `json:"header"`
-	Rest        *TypeSpec    `json:"rest"`
-	Body        *TypeSpec    `json:"body"`
-	Success     []*DocRet    `json:"success"`
-	Fail        []*DocRet    `json:"fail"`
+	Method      []string     `json:"method,omitempty"`
+	Tag         []string     `json:"tag,omitempty"`
+	Accept      []string     `json:"accept,omitempty"`
+	Header      []*DocHeader `json:"header,omitempty"`
+	Rest        *TypeSpec    `json:"rest,omitempty"`
+	Body        *TypeSpec    `json:"body,omitempty"`
+	Success     []*DocRet    `json:"success,omitempty"`
+	Fail        []*DocRet    `json:"fail,omitempty"`
 	pkg         *Pkg         `json:"-"`
 }
 

@@ -1,8 +1,12 @@
 package doc
 
-import "go/ast"
+import (
+	"encoding/json"
+	"go/ast"
+	"os"
+	"strings"
+)
 
-// todo
 func GetApis(pacakges ...string) []*DocApi {
 
 	apis := []*DocApi{}
@@ -26,4 +30,26 @@ func GetApis(pacakges ...string) []*DocApi {
 		}
 	}
 	return apis
+}
+
+func Export(dir string, pacakges ...string) error {
+
+	dir = strings.TrimRight(dir, "/\\")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		os.MkdirAll(dir, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	apis := GetApis(pacakges...)
+
+	js, err := json.Marshal(apis)
+	if err != nil {
+		return err
+	}
+	dir += "/doc.json"
+
+	os.WriteFile(dir, js, os.ModePerm)
+	return nil
 }

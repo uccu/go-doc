@@ -15,7 +15,11 @@ type Type int
 
 const (
 	NilType Type = 0 + iota
-	IdentType
+	BoolType
+	IntType
+	UintType
+	FloatType
+	StringType
 	InterfaceType
 	StructType
 	SliceType
@@ -41,6 +45,24 @@ var nameKinds = map[string]reflect.Kind{
 	"string":  reflect.String,
 }
 
+var nameTypes = map[string]Type{
+	"bool":    BoolType,
+	"int":     IntType,
+	"int8":    IntType,
+	"int16":   IntType,
+	"int32":   IntType,
+	"int64":   IntType,
+	"uint":    UintType,
+	"uint8":   UintType,
+	"uint16":  UintType,
+	"uint32":  UintType,
+	"uint64":  UintType,
+	"uintptr": UintType,
+	"float32": FloatType,
+	"float64": FloatType,
+	"string":  StringType,
+}
+
 type TypeSpec struct {
 	TypeName string
 	Kind     reflect.Kind
@@ -51,6 +73,36 @@ type TypeSpec struct {
 	pkg      *Pkg
 	Doc      []string
 	Comment  string
+}
+
+func (ts *TypeSpec) MarshalJSON() ([]byte, error) {
+
+	switch ts.Type {
+	case NilType:
+		return []byte("\"null\""), nil
+	case BoolType:
+		return []byte("\"bool\""), nil
+	case IntType:
+		return []byte("\"int\""), nil
+	case UintType:
+		return []byte("\"uint\""), nil
+	case FloatType:
+		return []byte("\"float\""), nil
+	case StringType:
+		return []byte("\"string\""), nil
+	case InterfaceType:
+		return []byte("\"any\""), nil
+	case StructType:
+		// ret = "struct"
+	case SliceType:
+		// ret = "array"
+	case MapType:
+		// ret = "map"
+	case TypeType:
+		return parseTypeType(ts.TypeName, ts.pkg).MarshalJSON()
+	}
+
+	return []byte("\"\""), nil
 }
 
 var NilTypeSpec = &TypeSpec{
@@ -193,12 +245,12 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 
 		if ident.Obj == nil {
 			typeSpec.TypeName = ident.Name
-			typeSpec.Type = IdentType
 			kind, ok := nameKinds[typeSpec.TypeName]
 			if !ok {
 				return nil
 			}
 			typeSpec.Kind = kind
+			typeSpec.Type, _ = nameTypes[typeSpec.TypeName]
 			return typeSpec
 		}
 
