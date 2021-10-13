@@ -26,8 +26,8 @@ type SSDocInfo struct {
 }
 
 type SSDocServer struct {
-	Url         string `json:"url"`         // 服务地址前缀
-	Description string `json:"description"` // 描述
+	Url         string `json:"url"`                   // 服务地址前缀
+	Description string `json:"description,omitempty"` // 描述
 }
 
 type SSDocApi struct {
@@ -159,20 +159,21 @@ func (doc *SSDoc) AddApi(i *DocApi) *SSDoc {
 	return doc
 }
 
-func (doc *SSDoc) Export(dir string, pacakges ...string) error {
+func (doc *SSDoc) AddPacakges(pacakges ...string) *SSDoc {
+	apis := GetApis(pacakges...)
+	for _, api := range apis {
+		doc.AddApi(api)
+	}
+	return doc
+}
 
+func (doc *SSDoc) Export(dir string) error {
 	dir = strings.TrimRight(dir, "/\\")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		os.MkdirAll(dir, os.ModePerm)
 		if err != nil {
 			return err
 		}
-	}
-
-	apis := GetApis(pacakges...)
-
-	for _, api := range apis {
-		doc.AddApi(api)
 	}
 
 	js, err := json.Marshal(doc)
