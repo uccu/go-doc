@@ -27,6 +27,7 @@ type DocApi struct {
 	Category    string       `json:"category"`
 	Router      string       `json:"router"`
 	Type        string       `json:"type"`
+	Server      string       `json:"server"`
 	Method      []string     `json:"method,omitempty"`
 	Tag         []string     `json:"tag,omitempty"`
 	Accept      []string     `json:"accept,omitempty"`
@@ -79,6 +80,8 @@ func (doc *DocApi) ParseComment(comment string) bool {
 		return doc.ParseRouter(commentPieces)
 	case "Type":
 		return doc.ParseType(commentPieces)
+	case "Server":
+		return doc.ParseServer(commentPieces)
 	case "Method":
 		return doc.ParseMethod(commentPieces)
 	case "Tag":
@@ -264,6 +267,13 @@ func (doc *DocApi) ParseRouter(s []string) bool {
 func (doc *DocApi) ParseType(s []string) bool {
 	if len(s) > 0 {
 		doc.Type = s[0]
+		return true
+	}
+	return false
+}
+func (doc *DocApi) ParseServer(s []string) bool {
+	if len(s) > 0 {
+		doc.Server = s[0]
 		return true
 	}
 	return false
