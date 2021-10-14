@@ -120,11 +120,11 @@ func (doc *SSDoc) AddApi(i *DocApi) *SSDoc {
 	}
 
 	if i.Rest != nil {
-		parseType(i.Rest)
+		api.Rest = parseType(i.Rest)
 	}
 
 	if i.Body != nil {
-		parseType(i.Body)
+		api.Body = parseType(i.Body)
 	}
 	if i.Success != nil {
 		api.Success = make([]*SSDocRet, 0)

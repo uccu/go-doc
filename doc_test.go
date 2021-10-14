@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+	"text/template"
 
 	"github.com/uccu/go-doc"
 )
@@ -43,9 +44,13 @@ func TestJson(t *testing.T) {
 
 	str, _ := json.Marshal(ssdoc)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/doc.json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 		w.Write([]byte(str))
+	})
+	http.HandleFunc("/index.html", func(w http.ResponseWriter, r *http.Request) {
+		t, _ := template.New("index.html").ParseFiles("index.html")
+		t.Execute(w, nil)
 	})
 	http.ListenAndServe(":7000", nil)
 }

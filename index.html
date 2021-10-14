@@ -159,26 +159,9 @@
     </style>
 
     <style>
-        .row {
+        /* .row {
             margin: 50px auto
-        }
-        
-        .col-xs-4,
-        .col-xs-8,
-        .col-xs-12,
-        .col-xs-6 {
-            padding: 10px
-        }
-        
-        .col-xs-6.d1 {
-            background-color: #fcfdfe;
-            overflow-x: auto;
-        }
-        
-        .col-xs-6.d2 {
-            background-color: #fefffc;
-            overflow-x: auto;
-        }
+        } */
         
         .title {
             font-weight: bold;
@@ -206,6 +189,10 @@
         
         .category-box .accordion-button {
             box-shadow: inset 0 -1px 0 rgb(0 0 0 / 13%);
+        }
+        
+        .api .val .badge {
+            font-weight: normal;
         }
     </style>
     <script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
@@ -253,22 +240,22 @@
 </head>
 
 <body>
-
-    <div class="container">
-        <div class="row">
-            <div class="col-4">
-                <h2>SSDoc</h2>
-            </div>
-            <div class="col-8">
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control jsonInput" placeholder="输入JSON地址" aria-describedby="button-addon1">
-                    <button class="btn btn-outline-secondary export" type="button" id="button-addon1">Export</button>
+    <div class="container-fluid bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-4" style="margin: 50px auto">
+                    <h2>SSDoc</h2>
+                </div>
+                <div class="col-8" style="margin: 50px auto">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control jsonInput" placeholder="输入JSON地址" aria-describedby="button-addon1">
+                        <button class="btn btn-outline-secondary export" type="button" id="button-addon1">Export</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="container">
+    <div class="container" style="margin: 50px auto">
         <div class="container">
             <h1>
                 <span class="title">接口文档</span>
@@ -289,6 +276,77 @@
 
     <script>
         j(function() {
+            let NilType = 0
+            let BoolType = 1
+            let IntType = 2
+            let UintType = 3
+            let FloatType = 4
+            let StringType = 5
+            let InterfaceType = 6
+            let StructType = 7
+            let SliceType = 8
+            let MapType = 9
+            let TypeType = 10
+
+            function getType(t, n = 0, m = null) {
+
+                let str = ""
+
+                if (m === "[name]") {
+                    for (let i = 0; i < n; i++) {
+                        str += "&nbsp;&nbsp;&nbsp;&nbsp;"
+                    }
+                    str += t.name + ": "
+                } else if (m !== null) {
+                    str += m
+                } else {
+                    for (let i = 0; i < n; i++) {
+                        str += "&nbsp;&nbsp;&nbsp;&nbsp;"
+                    }
+                }
+
+                if (t.type === BoolType) {
+                    return str + "bool<br>"
+                }
+
+                if (t.type === IntType) {
+                    return str + '<span class="text-info">int</span><br>'
+                }
+
+                if (t.type === UintType) {
+                    return str + "uint<br>"
+                }
+
+                if (t.type === FloatType) {
+                    return str + "float<br>"
+                }
+                if (t.type === StringType) {
+                    return str + "string<br>"
+                }
+                if (t.type === InterfaceType) {
+                    return str + "any<br>"
+                }
+                if (t.type === SliceType) {
+                    return str + getType(t.value[0], n, "[] ")
+                }
+                if (t.type === MapType) {
+                    return str + getType(t.value[0], n, "map[<br>") + ']' + getType(t.value[0], n, " ")
+                }
+                if (t.type === StructType) {
+                    str += t.name + ' {<br>'
+                    for (v of t.value) {
+                        str += getType(v, n + 1, "[name]")
+                    }
+                    str += '}<br>'
+                    return str
+                }
+                if (t.type === TypeType) {
+                    return getType(t.value[0], n, m)
+                }
+
+                return str + "null"
+            }
+
             j('.export').click(function() {
                 let url = j('.jsonInput').val()
                 j.getJSON(url, function(data) {
@@ -317,12 +375,42 @@
                     for (i in data.apis) {
                         let apis = data.apis[i]
 
-                        let d = '<div class="accordion-item"><h2 class="accordion-header" id="category-h-' + k + '"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#category-c-' + k + '" aria-expanded="true" aria-controls="category-c-' + k + '">' + i + '</button></h2><div id="category-c-' + k + '" class="accordion-collapse collapse" aria-labelledby="category-h' + k + '"><div class="accordion-body">'
+                        let d = '<div class="accordion-item category"><h2 class="accordion-header" id="category-h-' + k + '"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#category-c-' + k + '" aria-expanded="true" aria-controls="category-c-' + k + '">' + i + '</button></h2><div id="category-c-' + k + '" class="accordion-collapse collapse" aria-labelledby="category-h' + k + '"><div class="accordion-body">'
 
-                        for (api of apis) {
+                        for (k in apis) {
+                            let api = apis[k]
 
+                            let a = '<div class="accordion-item api"><h2 class="accordion-header" id="api-h-' + k + '"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#api-c-' + k + '" aria-expanded="true" aria-controls="api-c-' + k + '">'
 
+                            a += '<div class="api-header">' + '<span class="badge bg-success">' + api.method.join("/") + '</span> <span class="badge bg-light text-dark">' + api.path + '</span> <span class="badge text-dark">' + api.name + "</span></div>"
 
+                            a += '</button></h2><div id="api-c-' + k + '" class="accordion-collapse collapse" aria-labelledby="api-h' + k + '"><div class="accordion-body"><ul class="list-group">'
+
+                            if (api.server && data.servers && data.servers[api.server])
+                                a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Server</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + data.servers[api.server].url + '</span></div></div></li>'
+                            a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Path</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + api.path + '</span></div></div></li>'
+
+                            if (api.description)
+                                a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Description</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + api.description + '</span></div></div></li>'
+
+                            if (api.header)
+                                a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Header</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + api.header + '</span></div></div></li>'
+                            if (api.rest)
+                                a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Rest</span></div><div class="col-8 val"><p>' + getType(api.rest) + '</p></div></div></li>'
+                            if (api.body)
+                                a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Body</span></div><div class="col-8 val"><p style="background:#41444e;font-size:0.75em;color:#fff;padding:10px 20px">' + getType(api.body) + '</p></div></div></li>'
+                            if (api.success)
+                                for (i of api.success) {
+                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Success</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + getType(i) + '</span></div></div></li>'
+                                }
+
+                            if (api.fail)
+                                for (i of api.fail) {
+                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Fail</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + getType(i) + '</span></div></div></li>'
+                                }
+
+                            a += '</ul></div></div></div>'
+                            d += a
 
                         }
 
@@ -333,6 +421,7 @@
 
                 })
             })
+
             let url = GET("url")
             if (url) {
                 j('.jsonInput').val(url)
