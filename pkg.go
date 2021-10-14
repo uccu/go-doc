@@ -86,7 +86,7 @@ func (pkg *Pkg) SetStru() *Pkg {
 
 func (pkg *Pkg) GetStru(name string) *TypeSpec {
 	s, ok := pkg.SetStru().stru[name]
-	if !ok {
+	if !ok || s == nil {
 		return nil
 	}
 	s.Name = name

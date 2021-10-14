@@ -2,6 +2,7 @@ package doc_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 	"text/template"
@@ -52,5 +53,7 @@ func TestJson(t *testing.T) {
 		t, _ := template.New("index.html").ParseFiles("index.html")
 		t.Execute(w, nil)
 	})
+	fmt.Println("doc addr : http://127.0.0.1:7000/index.html?url=http://127.0.0.1:7000/doc.json")
+	fmt.Println("json addr : http://127.0.0.1:7000/doc.json")
 	http.ListenAndServe(":7000", nil)
 }

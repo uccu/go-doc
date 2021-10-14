@@ -8,19 +8,19 @@ import (
 	"github.com/uccu/go-stringify"
 )
 
-// @Summary	获取用户信息
-// @Desc/Description	获取用户信息
-// @Category 用户分类
-// @Router 	路径
-// @Type 	http/ws
-// @Method 	POST[,GET]
-// @Tag 	用户
-// @Accept 	json
-// @Header... 	Auth [true] 备注
-// @Rest 	Struct
-// @Body 	Struct
-// @Success... [200] KEY Struct
-// @FAIL... 	[400] KEY Struct
+// @Summary				名字
+// @Desc/Description	描述
+// @Category			分类
+// @Router				路径
+// @Type				http/ws
+// @Method				post[,get]
+// @Tag					tag[,tag]
+// @Accept				json
+// @Header...			KEY require 备注
+// @Rest				Struct
+// @Body				Struct
+// @Success...			code KEY Struct
+// @FAIL...				code KEY Struct
 type DocApi struct {
 	Summary     string       `json:"summary"`
 	Description string       `json:"description"`
@@ -104,14 +104,8 @@ func (doc *DocApi) ParseComment(comment string) bool {
 }
 
 func (doc *DocApi) ParseSuccess(s []string) bool {
-	if len(s) < 2 {
+	if len(s) < 3 {
 		return false
-	}
-
-	if len(s) == 2 {
-		s[2] = s[1]
-		s[1] = s[0]
-		s[0] = "200"
 	}
 
 	stru := parseTypeType(s[2], doc.pkg)
@@ -133,14 +127,8 @@ func (doc *DocApi) ParseSuccess(s []string) bool {
 }
 
 func (doc *DocApi) ParseFail(s []string) bool {
-	if len(s) < 2 {
+	if len(s) < 3 {
 		return false
-	}
-
-	if len(s) == 2 {
-		s[2] = s[1]
-		s[1] = s[0]
-		s[0] = "200"
 	}
 
 	stru := parseTypeType(s[2], doc.pkg)
@@ -166,10 +154,7 @@ func (doc *DocApi) ParseBody(s []string) bool {
 		return false
 	}
 	doc.Body = parseTypeType(s[0], doc.pkg)
-	if doc.Body == nil {
-		return false
-	}
-	return true
+	return doc.Body != nil
 }
 
 func (doc *DocApi) ParseRest(s []string) bool {
@@ -177,20 +162,12 @@ func (doc *DocApi) ParseRest(s []string) bool {
 		return false
 	}
 	doc.Rest = parseTypeType(s[0], doc.pkg)
-	if doc.Rest == nil {
-		return false
-	}
-	return true
+	return doc.Rest != nil
 }
 
 func (doc *DocApi) ParseHeader(s []string) bool {
-	if len(s) < 2 {
+	if len(s) < 3 {
 		return false
-	}
-
-	if len(s) == 2 {
-		s[2] = s[1]
-		s[1] = "false"
 	}
 
 	docHeader := &DocHeader{
@@ -217,9 +194,7 @@ func (doc *DocApi) ParseAccept(s []string) bool {
 
 	doc.Accept = make([]string, 0)
 	for _, s := range s {
-		for _, s := range stringify.ToStringSlice(s) {
-			doc.Accept = append(doc.Accept, s)
-		}
+		doc.Accept = append(doc.Accept, stringify.ToStringSlice(s)...)
 	}
 
 	return true
@@ -235,9 +210,7 @@ func (doc *DocApi) ParseTag(s []string) bool {
 	}
 
 	for _, s := range s {
-		for _, s := range stringify.ToStringSlice(s) {
-			doc.Tag = append(doc.Tag, s)
-		}
+		doc.Tag = append(doc.Tag, stringify.ToStringSlice(s)...)
 	}
 	return true
 }
@@ -249,9 +222,7 @@ func (doc *DocApi) ParseMethod(s []string) bool {
 
 	doc.Method = make([]string, 0)
 	for _, s := range s {
-		for _, s := range stringify.ToStringSlice(s) {
-			doc.Method = append(doc.Method, s)
-		}
+		doc.Method = append(doc.Method, stringify.ToStringSlice(s)...)
 	}
 	return true
 }

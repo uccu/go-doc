@@ -9,28 +9,28 @@
     <title>SSDoc UI</title>
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
-         ::selection {
+        ::selection {
             color: #FFFFFF;
             background-color: #C2300B;
             text-shadow: none
         }
-        
-         ::-webkit-scrollbar-track-piece {
+
+        ::-webkit-scrollbar-track-piece {
             background-color: #fff;
             border-radius: 6px
         }
-        
-         ::-webkit-scrollbar {
+
+        ::-webkit-scrollbar {
             width: 6px;
             height: 6px
         }
-        
-         ::-webkit-scrollbar-thumb {
+
+        ::-webkit-scrollbar-thumb {
             height: 40px;
             background: #999;
             border-radius: 6px
         }
-        
+
         .t,
         .t * {
             transition: all 0.3s;
@@ -38,7 +38,7 @@
             -webkit-transition: all 0.3s;
             -o-transition: all 0.3s
         }
-        
+
         .t-1,
         .t-1 * {
             transition: all 1s;
@@ -46,7 +46,7 @@
             -webkit-transition: all 1s;
             -o-transition: all 1s
         }
-        
+
         .t-2,
         .t-2 * {
             transition: all 2s;
@@ -54,105 +54,105 @@
             -webkit-transition: all 2s;
             -o-transition: all 2s
         }
-        
+
         .cp {
             cursor: pointer
         }
-        
+
         .cd {
             cursor: default
         }
-        
+
         .cm {
             cursor: move
         }
-        
+
         .db {
             display: block
         }
-        
+
         .dib {
             display: inline-block
         }
-        
+
         .dt {
             display: table
         }
-        
+
         .di {
             display: inline
         }
-        
+
         .dtc {
             display: table-cell
         }
-        
+
         .dif {
             display: inline-flex
         }
-        
+
         .dn {
             display: none
         }
-        
+
         .fl {
             float: left
         }
-        
+
         .fr {
             float: right
         }
-        
+
         .fn {
             float: none !important
         }
-        
+
         .tl {
             text-align: left
         }
-        
+
         .tc {
             text-align: center
         }
-        
+
         .tr {
             text-align: right
         }
-        
+
         .pr {
             position: relative
         }
-        
+
         .pf {
             position: fixed
         }
-        
+
         .pa {
             position: absolute
         }
-        
+
         .ps {
             position: static
         }
-        
+
         .ofh {
             overflow: hidden
         }
-        
+
         a:focus,
         a:hover {
             text-decoration: none
         }
-        
+
         .clear::after {
             clear: both;
             display: block
         }
-        
+
         .noresize {
             resize: none
         }
-        
+
         input[type=file] {
             border: 0
         }
@@ -162,11 +162,11 @@
         /* .row {
             margin: 50px auto
         } */
-        
+
         .title {
             font-weight: bold;
         }
-        
+
         .version {
             bottom: 2em;
             font-size: .3em;
@@ -175,24 +175,31 @@
             border-radius: 10px;
             padding: 2px 10px;
         }
-        
+
         .server .card,
         .description-box .card {
             margin-bottom: 20px;
         }
-        
+
         .description {
             font-size: 14px;
             font-family: Open Sans, sans-serif;
             color: #3b4151;
         }
-        
+
         .category-box .accordion-button {
             box-shadow: inset 0 -1px 0 rgb(0 0 0 / 13%);
         }
-        
+
         .api .val .badge {
             font-weight: normal;
+        }
+
+        .api .val .code {
+            background: #41444e;
+            font-size: 0.75em;
+            color: #fff;
+            padding: 10px 20px
         }
     </style>
     <script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
@@ -200,23 +207,23 @@
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.2/js/bootstrap.min.js"></script>
     <script>
         j = jQuery.noConflict();
-        ~ function(w, j) {
+        ~ function (w, j) {
 
             w.folder = location.pathname.split("/").slice(1);
             w.tool = {
-                isFunc: function(f) {
+                isFunc: function (f) {
                     return typeof f === 'function'
                 },
-                post: function(z) {
+                post: function (z) {
                     var a = {
                         url: z.url,
                         data: z.data,
                         type: 'post',
                         dataType: 'json',
-                        beforeSend: function(xhr) {
+                        beforeSend: function (xhr) {
                             if (w.tool.isFunc(z.bfunc)) z.bfunc(xhr);
                         },
-                        success: function(d) {
+                        success: function (d) {
                             if (d.code != 200) alert(d.message);
                             else if (w.tool.isFunc(z.func)) z.func(d.data);
                         }
@@ -229,7 +236,7 @@
                 }
             }
 
-            w.GET = function(n) {
+            w.GET = function (n) {
                 var p = new URL(location);
                 return p.searchParams.get(n);
             }
@@ -248,8 +255,10 @@
                 </div>
                 <div class="col-8" style="margin: 50px auto">
                     <div class="input-group mb-3">
-                        <input type="text" class="form-control jsonInput" placeholder="输入JSON地址" aria-describedby="button-addon1">
-                        <button class="btn btn-outline-secondary export" type="button" id="button-addon1">Export</button>
+                        <input type="text" class="form-control jsonInput" placeholder="输入JSON地址"
+                            aria-describedby="button-addon1">
+                        <button class="btn btn-outline-secondary export" type="button"
+                            id="button-addon1">Export</button>
                     </div>
                 </div>
             </div>
@@ -275,7 +284,7 @@
 
 
     <script>
-        j(function() {
+        j(function () {
             let NilType = 0
             let BoolType = 1
             let IntType = 2
@@ -296,7 +305,10 @@
                     for (let i = 0; i < n; i++) {
                         str += "&nbsp;&nbsp;&nbsp;&nbsp;"
                     }
-                    str += t.name + ": "
+                    if (t.json == '-') {
+                        return ''
+                    }
+                    str += (t.json || t.name) + ": "
                 } else if (m !== null) {
                     str += m
                 } else {
@@ -306,36 +318,49 @@
                 }
 
                 if (t.type === BoolType) {
-                    return str + "bool<br>"
+                    return str + '<span class="text-info">'+t.typeName+'</span><br>'
                 }
 
                 if (t.type === IntType) {
-                    return str + '<span class="text-info">int</span><br>'
+                    return str + '<span class="text-info">'+t.typeName+'</span><br>'
                 }
 
                 if (t.type === UintType) {
-                    return str + "uint<br>"
+                    return str + '<span class="text-info">'+t.typeName+'</span><br>'
                 }
 
                 if (t.type === FloatType) {
-                    return str + "float<br>"
+                    return str + '<span class="text-info">'+t.typeName+'</span><br>'
                 }
                 if (t.type === StringType) {
-                    return str + "string<br>"
+                    return str + '<span class="text-info">'+t.typeName+'</span><br>'
                 }
                 if (t.type === InterfaceType) {
-                    return str + "any<br>"
+                    return str + '<span class="text-info">'+t.typeName+'</span><br>'
                 }
                 if (t.type === SliceType) {
-                    return str + getType(t.value[0], n, "[] ")
+                    let k= getType(t.value[0], n, "[")
+                    return str + k.substring(0,k.length-4)+']<br>'
                 }
                 if (t.type === MapType) {
-                    return str + getType(t.value[0], n, "map[<br>") + ']' + getType(t.value[0], n, " ")
+                    let k=getType(t.value[0], n+1)
+                    str += '{<br>' + k.substring(0,k.length-4)  + getType(t.value[0], n+1, ': ')
+                    for (let i = 0; i < n+1; i++) {
+                        str += "&nbsp;&nbsp;&nbsp;&nbsp;"
+                    }
+                    str += '...<br>'
+                    for (let i = 0; i < n; i++) {
+                        str += "&nbsp;&nbsp;&nbsp;&nbsp;"
+                    }
+                    return str+'}<br>'
                 }
                 if (t.type === StructType) {
-                    str += t.name + ' {<br>'
+                    str += '{<br>'
                     for (v of t.value) {
                         str += getType(v, n + 1, "[name]")
+                    }
+                    for (let i = 0; i < n; i++) {
+                        str += "&nbsp;&nbsp;&nbsp;&nbsp;"
                     }
                     str += '}<br>'
                     return str
@@ -347,9 +372,9 @@
                 return str + "null"
             }
 
-            j('.export').click(function() {
+            j('.export').click(function () {
                 let url = j('.jsonInput').val()
-                j.getJSON(url, function(data) {
+                j.getJSON(url, function (data) {
                     let k = 0
                     j('.server').html('')
                     j('.category-box').html('')
@@ -375,7 +400,7 @@
                     for (i in data.apis) {
                         let apis = data.apis[i]
 
-                        let d = '<div class="accordion-item category"><h2 class="accordion-header" id="category-h-' + k + '"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#category-c-' + k + '" aria-expanded="true" aria-controls="category-c-' + k + '">' + i + '</button></h2><div id="category-c-' + k + '" class="accordion-collapse collapse" aria-labelledby="category-h' + k + '"><div class="accordion-body">'
+                        let d = '<div class="accordion-item category"><h2 class="accordion-header" id="category-h-' + k + '"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#category-c-' + k + '" aria-expanded="true" aria-controls="category-c-' + k + '">' + i + '</button></h2><div id="category-c-' + k + '" class="accordion-collapse collapse show" aria-labelledby="category-h' + k + '"><div class="accordion-body">'
 
                         for (k in apis) {
                             let api = apis[k]
@@ -384,7 +409,7 @@
 
                             a += '<div class="api-header">' + '<span class="badge bg-success">' + api.method.join("/") + '</span> <span class="badge bg-light text-dark">' + api.path + '</span> <span class="badge text-dark">' + api.name + "</span></div>"
 
-                            a += '</button></h2><div id="api-c-' + k + '" class="accordion-collapse collapse" aria-labelledby="api-h' + k + '"><div class="accordion-body"><ul class="list-group">'
+                            a += '</button></h2><div id="api-c-' + k + '" class="accordion-collapse collapse show" aria-labelledby="api-h' + k + '"><div class="accordion-body"><ul class="list-group">'
 
                             if (api.server && data.servers && data.servers[api.server])
                                 a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Server</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + data.servers[api.server].url + '</span></div></div></li>'
@@ -397,16 +422,18 @@
                                 a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Header</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + api.header + '</span></div></div></li>'
                             if (api.rest)
                                 a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Rest</span></div><div class="col-8 val"><p>' + getType(api.rest) + '</p></div></div></li>'
-                            if (api.body)
-                                a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Body</span></div><div class="col-8 val"><p style="background:#41444e;font-size:0.75em;color:#fff;padding:10px 20px">' + getType(api.body) + '</p></div></div></li>'
+                            if (api.body) {
+                                a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Body</span></div><div class="col-8 val"><p class="code">' + getType(api.body) + '</p></div></div></li>'
+                            }
+
                             if (api.success)
                                 for (i of api.success) {
-                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Success</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + getType(i) + '</span></div></div></li>'
+                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge bg-success">Success</span> <span class="badge bg-secondary">' + i.key + '</span> <span class="badge bg-dark">' + i.code + '</span></div><div class="col-8 val"><p class="code">' + getType(i.value) + '</p></div></div></li>'
                                 }
 
                             if (api.fail)
                                 for (i of api.fail) {
-                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Fail</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + getType(i) + '</span></div></div></li>'
+                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge bg-success">Success</span> <span class="badge bg-secondary">' + i.key + '</span> <span class="badge bg-dark">' + i.code + '</span></div><div class="col-8 val"><p class="code">' + getType(i.value) + '</p></div></div></li>'
                                 }
 
                             a += '</ul></div></div></div>'

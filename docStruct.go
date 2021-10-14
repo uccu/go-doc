@@ -25,6 +25,7 @@ const (
 	SliceType
 	MapType
 	TypeType
+	CustomType
 )
 
 var nameKinds = map[string]reflect.Kind{
@@ -43,6 +44,8 @@ var nameKinds = map[string]reflect.Kind{
 	"float32": reflect.Float32,
 	"float64": reflect.Float64,
 	"string":  reflect.String,
+	"byte":    reflect.Uint8,
+	"rune":    reflect.Int32,
 }
 
 var nameTypes = map[string]Type{
@@ -61,6 +64,8 @@ var nameTypes = map[string]Type{
 	"float32": FloatType,
 	"float64": FloatType,
 	"string":  StringType,
+	"byte":    UintType,
+	"rune":    IntType,
 }
 
 type TypeSpec struct {
@@ -73,36 +78,6 @@ type TypeSpec struct {
 	pkg      *Pkg
 	Doc      []string
 	Comment  string
-}
-
-func (ts *TypeSpec) MarshalJSON() ([]byte, error) {
-
-	switch ts.Type {
-	case NilType:
-		return []byte("\"null\""), nil
-	case BoolType:
-		return []byte("\"bool\""), nil
-	case IntType:
-		return []byte("\"int\""), nil
-	case UintType:
-		return []byte("\"uint\""), nil
-	case FloatType:
-		return []byte("\"float\""), nil
-	case StringType:
-		return []byte("\"string\""), nil
-	case InterfaceType:
-		return []byte("\"any\""), nil
-	case StructType:
-		// ret = "struct"
-	case SliceType:
-		// ret = "array"
-	case MapType:
-		// ret = "map"
-	case TypeType:
-		return parseTypeType(ts.TypeName, ts.pkg).MarshalJSON()
-	}
-
-	return []byte("\"\""), nil
 }
 
 var NilTypeSpec = &TypeSpec{
@@ -216,6 +191,7 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 			return nil
 		}
 		typeSpec.Value = []*TypeSpec{field}
+		typeSpec.TypeName = "array"
 		return typeSpec
 	case "MapType":
 		arr, ok := t.(*ast.MapType)
@@ -229,14 +205,23 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 			return nil
 		}
 		typeSpec.Value = []*TypeSpec{key, val}
+		typeSpec.TypeName = "map"
 		return typeSpec
 	case "InterfaceType":
 		_, ok := t.(*ast.InterfaceType)
 		if !ok {
 			return nil
 		}
+		typeSpec.TypeName = "any"
 		typeSpec.Type = InterfaceType
 		return typeSpec
+	case "StarExpr":
+		return ParseType(t.(*ast.StarExpr).X, pkg)
+	case "Time":
+		typeSpec.Type = CustomType
+		typeSpec.Kind = reflect.Struct
+		return typeSpec
+
 	case "Ident":
 		ident, ok := t.(*ast.Ident)
 		if !ok {
@@ -250,7 +235,7 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 				return nil
 			}
 			typeSpec.Kind = kind
-			typeSpec.Type, _ = nameTypes[typeSpec.TypeName]
+			typeSpec.Type = nameTypes[typeSpec.TypeName]
 			return typeSpec
 		}
 

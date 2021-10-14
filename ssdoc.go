@@ -57,9 +57,11 @@ type SSDocType struct {
 	Name        string       `json:"name"`                  // 名称
 	Description string       `json:"description,omitempty"` // 描述
 	Type        Type         `json:"type"`                  // 类型
+	TypeName    string       `json:"typeName"`              // 类型名字
 	Require     bool         `json:"require,omitempty"`     // 是否必须
 	Value       []*SSDocType `json:"value,omitempty"`       // 值
 	Default     *string      `json:"default,omitempty"`     // 默认值
+	Json        *string      `json:"json,omitempty"`        // json key
 }
 
 type SSDocRet struct {
@@ -188,8 +190,9 @@ func (doc *SSDoc) Export(dir string) error {
 
 func parseType(t *TypeSpec) *SSDocType {
 	typ := &SSDocType{
-		Name: t.Name,
-		Type: t.Type,
+		Name:     t.Name,
+		Type:     t.Type,
+		TypeName: t.TypeName,
 	}
 	if t.Doc != nil {
 		typ.Description = t.Doc[0]
@@ -202,6 +205,9 @@ func parseType(t *TypeSpec) *SSDocType {
 		if tag, _ := t.Tags.Get("default"); tag != nil {
 			typ.Default = &tag.Name
 		}
+		if tag, _ := t.Tags.Get("json"); tag != nil {
+			typ.Json = &tag.Name
+		}
 	}
 
 	if t.Value != nil {
@@ -210,8 +216,12 @@ func parseType(t *TypeSpec) *SSDocType {
 			typ.Value = append(typ.Value, parseType(t))
 		}
 	} else if t.Type == TypeType {
+
+		v := parseTypeType(t.TypeName, t.pkg)
+		v.Name = t.Name
+		v.Tags = t.Tags
 		typ.Value = []*SSDocType{
-			parseType(parseTypeType(t.TypeName, t.pkg)),
+			parseType(v),
 		}
 	}
 	return typ
