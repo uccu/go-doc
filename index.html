@@ -435,7 +435,18 @@
                                 a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Description</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + api.description + '</span></div></div></li>'
 
                             if (api.header)
-                                a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Header</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + api.header + '</span></div></div></li>'
+                                for (i of api.header) {
+                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Header</span></div><div class="col-8 val"><span class="badge bg-light text-dark">'
+
+                                    if (i.required) {
+                                        a += '*'
+                                    }
+                                    a += i.name
+                                    if (i.description) {
+                                        a += '&nbsp;&nbsp;&nbsp;&nbsp;// ' + i.description
+                                    }
+                                    a += '</span></div></div></li>'
+                                }
                             if (api.rest)
                                 a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Rest</span></div><div class="col-8 val"><p>' + getType(api.rest) + '</p></div></div></li>'
                             if (api.body) {
