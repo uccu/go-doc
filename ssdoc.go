@@ -31,20 +31,20 @@ type SSDocServer struct {
 }
 
 type SSDocApi struct {
-	Name        string          `json:"name"`                  // 名称
-	Description string          `json:"description,omitempty"` // 描述
-	Path        string          `json:"path"`                  // 路径
-	Method      []string        `json:"method,omitempty"`      // 请求方式
-	Type        string          `json:"type"`                  // http/ws
-	Category    SSDocCategoryId `json:"category"`              // 分类
-	Server      SSDocServerId   `json:"server,omitempty"`      // 指定服务
-	Tag         []string        `json:"tag,omitempty"`         // 标签
-	Accept      []string        `json:"accept,omitempty"`      // 请求返回的类型,json/xml等
-	Header      []*SSDocHeader  `json:"header,omitempty"`      // 请求头
-	Rest        *SSDocType      `json:"rest,omitempty"`        // REST参数
-	Body        *SSDocType      `json:"body,omitempty"`        // 请求体参数
-	Success     []*SSDocRet     `json:"success,omitempty"`     // 成功返回内容
-	Fail        []*SSDocRet     `json:"fail,omitempty"`        // 失败返回内容
+	Name        string            `json:"name"`                  // 名称
+	Description string            `json:"description,omitempty"` // 描述
+	Path        string            `json:"path"`                  // 路径
+	Method      []string          `json:"method,omitempty"`      // 请求方式
+	Type        string            `json:"type"`                  // http/ws
+	Category    SSDocCategoryId   `json:"category"`              // 分类
+	Server      SSDocServerId     `json:"server,omitempty"`      // 指定服务
+	Tag         []string          `json:"tag,omitempty"`         // 标签
+	Accept      []string          `json:"accept,omitempty"`      // 请求返回的类型,json/xml等
+	Header      []*SSDocHeader    `json:"header,omitempty"`      // 请求头
+	Rest        *SSDocTypeWithKey `json:"rest,omitempty"`        // REST参数
+	Body        *SSDocTypeWithKey `json:"body,omitempty"`        // 请求体参数
+	Success     []*SSDocRet       `json:"success,omitempty"`     // 成功返回内容
+	Fail        []*SSDocRet       `json:"fail,omitempty"`        // 失败返回内容
 }
 
 type SSDocHeader struct {
@@ -53,21 +53,26 @@ type SSDocHeader struct {
 	Require     bool   `json:"require,omitempty"`     // 是否必须
 }
 
+type SSDocTypeWithKey struct {
+	Key     string  `json:"key"`
+	Default *string `json:"default,omitempty"` // 默认值
+	Json    *string `json:"json,omitempty"`    // json key
+	Require bool    `json:"require,omitempty"` // 是否必须
+	*SSDocType
+}
+
 type SSDocType struct {
-	Name        string       `json:"name"`                  // 名称
-	Description string       `json:"description,omitempty"` // 描述
-	Type        Type         `json:"type"`                  // 类型
-	TypeName    string       `json:"typeName"`              // 类型名字
-	Require     bool         `json:"require,omitempty"`     // 是否必须
-	Value       []*SSDocType `json:"value,omitempty"`       // 值
-	Default     *string      `json:"default,omitempty"`     // 默认值
-	Json        *string      `json:"json,omitempty"`        // json key
+	Name        string              `json:"name"`                  // 类型名字
+	Description string              `json:"description,omitempty"` // 描述
+	Type        Type                `json:"type"`                  // 类型
+	TypeName    string              `json:"typeName"`              // 类型名字
+	Value       []*SSDocTypeWithKey `json:"value,omitempty"`       // 值
 }
 
 type SSDocRet struct {
-	Code  int16      `json:"code,omitempty"`
-	Key   string     `json:"key,omitempty"`
-	Value *SSDocType `json:"value,omitempty"`
+	Code  int16             `json:"code,omitempty"`
+	Key   string            `json:"key,omitempty"`
+	Value *SSDocTypeWithKey `json:"value,omitempty"`
 }
 
 func NewSSDoc(info SSDocInfo, servers map[SSDocServerId]*SSDocServer) *SSDoc {
@@ -188,41 +193,45 @@ func (doc *SSDoc) Export(dir string) error {
 	return nil
 }
 
-func parseType(t *TypeSpec) *SSDocType {
-	typ := &SSDocType{
-		Name:     t.Name,
-		Type:     t.Type,
-		TypeName: t.TypeName,
+func parseType(t *TypeSpecWithKey) *SSDocTypeWithKey {
+
+	typ := &SSDocTypeWithKey{
+		Key: t.Key,
+		SSDocType: &SSDocType{
+			Name:        t.Name,
+			Type:        t.Type,
+			TypeName:    t.TypeName,
+			Description: t.Comment,
+		},
 	}
+
 	if t.Doc != nil {
 		typ.Description = t.Doc[0]
 	}
 
-	if t.Tags != nil {
-		if tag, _ := t.Tags.Get("require"); tag != nil && tag.Name == "true" {
-			typ.Require = true
-		}
-		if tag, _ := t.Tags.Get("default"); tag != nil {
-			typ.Default = &tag.Name
-		}
-		if tag, _ := t.Tags.Get("json"); tag != nil {
-			typ.Json = &tag.Name
-		}
-	}
-
 	if t.Value != nil {
-		typ.Value = make([]*SSDocType, 0)
+		typ.Value = make([]*SSDocTypeWithKey, 0)
 		for _, t := range t.Value {
-			typ.Value = append(typ.Value, parseType(t))
+			a := parseType(t)
+			if t.Tags != nil {
+				if tag, _ := t.Tags.Get("require"); tag != nil && tag.Name == "true" {
+					a.Require = true
+				}
+				if tag, _ := t.Tags.Get("default"); tag != nil {
+					a.Default = &tag.Name
+				}
+				if tag, _ := t.Tags.Get("json"); tag != nil {
+					if tag.Name == "-" {
+						continue
+					}
+					a.Json = &tag.Name
+				}
+			}
+			typ.Value = append(typ.Value, a)
 		}
 	} else if t.Type == TypeType {
-
 		v := parseTypeType(t.TypeName, t.pkg)
-		v.Name = t.Name
-		v.Tags = t.Tags
-		typ.Value = []*SSDocType{
-			parseType(v),
-		}
+		typ.Value = []*SSDocTypeWithKey{parseType(v)}
 	}
 	return typ
 }

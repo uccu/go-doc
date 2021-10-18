@@ -79,6 +79,7 @@ func (pkg *Pkg) SetStru() *Pkg {
 			}
 			typeSpec, _ := p.Decl.(*ast.TypeSpec)
 			pkg.stru[typeSpec.Name.Name] = ParseTypeSpec(typeSpec, pkg)
+			pkg.stru[typeSpec.Name.Name].Name = typeSpec.Name.Name
 		}
 	}
 	return pkg
@@ -89,7 +90,6 @@ func (pkg *Pkg) GetStru(name string) *TypeSpec {
 	if !ok || s == nil {
 		return nil
 	}
-	s.Name = name
 	return s
 }
 

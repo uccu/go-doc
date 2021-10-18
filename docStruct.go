@@ -68,13 +68,26 @@ var nameTypes = map[string]Type{
 	"rune":    IntType,
 }
 
+type TypeSpecWithKey struct {
+	Key  string
+	Tags *structtag.Tags
+	*TypeSpec
+}
+
+func (s *TypeSpecWithKey) isPublic() bool {
+	if s.Key == "" {
+		return true
+	}
+	strArry := []byte(s.Key)
+	return strArry[0] >= 65 && strArry[0] <= 90
+}
+
 type TypeSpec struct {
+	Name     string
 	TypeName string
 	Kind     reflect.Kind
 	Type     Type
-	Value    []*TypeSpec
-	Tags     *structtag.Tags
-	Name     string
+	Value    []*TypeSpecWithKey
 	pkg      *Pkg
 	Doc      []string
 	Comment  string
@@ -84,6 +97,9 @@ var NilTypeSpec = &TypeSpec{
 	Kind: reflect.Invalid,
 	Type: NilType,
 }
+var NilTypeSpecWithKey = &TypeSpecWithKey{
+	TypeSpec: NilTypeSpec,
+}
 
 type Struct interface {
 	GetStru(string) *TypeSpec
@@ -92,8 +108,8 @@ type Struct interface {
 func (ts *TypeSpec) GetStru(name string) *TypeSpec {
 	if ts.Type == StructType {
 		for _, field := range ts.Value {
-			if field.Name == name {
-				return field
+			if field.TypeName == name {
+				return field.TypeSpec
 			}
 		}
 	}
@@ -105,7 +121,6 @@ func ParseTypeSpec(t *ast.TypeSpec, pkg *Pkg) *TypeSpec {
 	if ts == nil {
 		return ts
 	}
-	ts.Name = t.Name.Name
 	if t.Comment != nil {
 		ts.Comment = strings.Trim(t.Comment.List[0].Text, "/ ")
 	}
@@ -134,19 +149,6 @@ func parseField(f *ast.Field, pkg *Pkg) *TypeSpec {
 		}
 		ts.Doc = list
 	}
-	if f.Tag != nil {
-		var err error
-		ts.Tags, err = structtag.Parse(strings.Trim(f.Tag.Value, "`"))
-		if err != nil {
-			return nil
-		}
-	}
-
-	ts.Name = ts.TypeName
-	if len(f.Names) > 0 {
-		ts.Name = f.Names[0].Name
-	}
-
 	return ts
 }
 
@@ -154,28 +156,47 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 	reflectType := reflect.TypeOf(t).Elem()
 
 	typeSpec := &TypeSpec{
-		pkg:      pkg,
-		TypeName: reflectType.Name(),
-		Kind:     reflectType.Kind(),
+		pkg:  pkg,
+		Kind: reflectType.Kind(),
 	}
 
-	switch typeSpec.TypeName {
+	reflectTypeName := reflectType.Name()
+
+	switch reflectTypeName {
 	case "StructType":
 		s, ok := t.(*ast.StructType)
 		if !ok {
 			return nil
 		}
 
-		list := []*TypeSpec{}
+		list := []*TypeSpecWithKey{}
 
 		for _, f := range s.Fields.List {
 			field := parseField(f, pkg)
 			if field == nil {
 				continue
 			}
-			list = append(list, field)
+			var key string
+			if f.Names != nil {
+				key = f.Names[0].Name
+			}
+			t := &TypeSpecWithKey{Key: key, TypeSpec: field}
+
+			if !t.isPublic() {
+				continue
+			}
+
+			if f.Tag != nil {
+				var err error
+				t.Tags, err = structtag.Parse(strings.Trim(f.Tag.Value, "`"))
+				if err != nil {
+					return nil
+				}
+			}
+			list = append(list, t)
 		}
 
+		typeSpec.TypeName = "object"
 		typeSpec.Type = StructType
 		typeSpec.Value = list
 		return typeSpec
@@ -190,7 +211,7 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 		if field == nil {
 			return nil
 		}
-		typeSpec.Value = []*TypeSpec{field}
+		typeSpec.Value = []*TypeSpecWithKey{{TypeSpec: field}}
 		typeSpec.TypeName = "array"
 		return typeSpec
 	case "MapType":
@@ -204,7 +225,7 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 		if key == nil || val == nil {
 			return nil
 		}
-		typeSpec.Value = []*TypeSpec{key, val}
+		typeSpec.Value = []*TypeSpecWithKey{{TypeSpec: key}, {TypeSpec: val}}
 		typeSpec.TypeName = "map"
 		return typeSpec
 	case "InterfaceType":
@@ -212,16 +233,17 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 		if !ok {
 			return nil
 		}
-		typeSpec.TypeName = "any"
 		typeSpec.Type = InterfaceType
+		typeSpec.TypeName = "any"
 		return typeSpec
 	case "StarExpr":
 		return ParseType(t.(*ast.StarExpr).X, pkg)
-	case "Time":
-		typeSpec.Type = CustomType
-		typeSpec.Kind = reflect.Struct
+	case "SelectorExpr":
+		expr := t.(*ast.SelectorExpr)
+		ident := expr.X.(*ast.Ident)
+		typeSpec.TypeName = ident.Name + "." + expr.Sel.Name
+		typeSpec.Type = TypeType
 		return typeSpec
-
 	case "Ident":
 		ident, ok := t.(*ast.Ident)
 		if !ok {
@@ -230,12 +252,12 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 
 		if ident.Obj == nil {
 			typeSpec.TypeName = ident.Name
-			kind, ok := nameKinds[typeSpec.TypeName]
+			kind, ok := nameKinds[ident.Name]
 			if !ok {
 				return nil
 			}
 			typeSpec.Kind = kind
-			typeSpec.Type = nameTypes[typeSpec.TypeName]
+			typeSpec.Type = nameTypes[ident.Name]
 			return typeSpec
 		}
 
@@ -253,35 +275,38 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 		return typeSpec
 	}
 
-	return nil
+	typeSpec.Type = CustomType
+	typeSpec.Kind = reflect.Struct
+	typeSpec.TypeName = reflectTypeName
+	return typeSpec
 
 }
 
-func parseTypeType(typeName string, pkg *Pkg) *TypeSpec {
+func parseTypeType(typeName string, pkg *Pkg) *TypeSpecWithKey {
 
 	paths := stringify.ToStringSlice(typeName, ".")
 	if len(paths) == 0 {
-		return NilTypeSpec
+		return nil
 	}
 
 	ts := pkg.GetStru(paths[0])
 	if len(paths) == 1 {
 		if ts == nil {
-			return NilTypeSpec
+			return nil
 		}
-		return ts
+		return &TypeSpecWithKey{TypeSpec: ts}
 	}
 
 	pkg = pkg.GetPkg(paths[0])
 	if pkg == nil {
-		return NilTypeSpec
+		return nil
 	}
 
 	ts = pkg.GetStru(paths[1])
 	if ts == nil {
-		return NilTypeSpec
+		return nil
 	}
-	return ts
+	return &TypeSpecWithKey{TypeSpec: ts}
 }
 
 func GetType(dir string) *Pkg {

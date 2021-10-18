@@ -45,15 +45,18 @@ func TestJson(t *testing.T) {
 
 	str, _ := json.Marshal(ssdoc)
 
+	// j := "http://127.0.0.1:7000/doc.json"
+
 	http.HandleFunc("/doc.json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 		w.Write([]byte(str))
 	})
 	http.HandleFunc("/index.html", func(w http.ResponseWriter, r *http.Request) {
+
 		t, _ := template.New("index.html").ParseFiles("index.html")
 		t.Execute(w, nil)
 	})
-	fmt.Println("doc addr : http://127.0.0.1:7000/index.html?url=http://127.0.0.1:7000/doc.json")
+	fmt.Println("doc addr : http://127.0.0.1:7000/index.html")
 	fmt.Println("json addr : http://127.0.0.1:7000/doc.json")
 	http.ListenAndServe(":7000", nil)
 }

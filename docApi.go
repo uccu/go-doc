@@ -22,21 +22,21 @@ import (
 // @Success...			code KEY Struct
 // @FAIL...				code KEY Struct
 type DocApi struct {
-	Summary     string       `json:"summary"`
-	Description string       `json:"description"`
-	Category    string       `json:"category"`
-	Router      string       `json:"router"`
-	Type        string       `json:"type"`
-	Server      string       `json:"server"`
-	Method      []string     `json:"method,omitempty"`
-	Tag         []string     `json:"tag,omitempty"`
-	Accept      []string     `json:"accept,omitempty"`
-	Header      []*DocHeader `json:"header,omitempty"`
-	Rest        *TypeSpec    `json:"rest,omitempty"`
-	Body        *TypeSpec    `json:"body,omitempty"`
-	Success     []*DocRet    `json:"success,omitempty"`
-	Fail        []*DocRet    `json:"fail,omitempty"`
-	pkg         *Pkg         `json:"-"`
+	Summary     string           `json:"summary"`
+	Description string           `json:"description"`
+	Category    string           `json:"category"`
+	Router      string           `json:"router"`
+	Type        string           `json:"type"`
+	Server      string           `json:"server"`
+	Method      []string         `json:"method,omitempty"`
+	Tag         []string         `json:"tag,omitempty"`
+	Accept      []string         `json:"accept,omitempty"`
+	Header      []*DocHeader     `json:"header,omitempty"`
+	Rest        *TypeSpecWithKey `json:"rest,omitempty"`
+	Body        *TypeSpecWithKey `json:"body,omitempty"`
+	Success     []*DocRet        `json:"success,omitempty"`
+	Fail        []*DocRet        `json:"fail,omitempty"`
+	pkg         *Pkg             `json:"-"`
 }
 
 type DocHeader struct {
@@ -48,7 +48,7 @@ type DocHeader struct {
 type DocRet struct {
 	Code  int16
 	Key   string
-	Value *TypeSpec
+	Value *TypeSpecWithKey
 }
 
 func (doc *DocApi) ParseComment(comment string) bool {
