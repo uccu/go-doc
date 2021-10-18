@@ -323,6 +323,9 @@
 
                 if (m === "[name]") {
                     add()
+                    if (tt && tt.required || t.required) {
+                        str += '*'
+                    }
                     str += ((tt ? tt.json : '') || t.json || t.key) + ": "
                 } else if (m !== null) {
                     str += m

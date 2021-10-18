@@ -50,14 +50,14 @@ type SSDocApi struct {
 type SSDocHeader struct {
 	Name        string `json:"name"`                  // 名称
 	Description string `json:"description,omitempty"` // 描述
-	Require     bool   `json:"require,omitempty"`     // 是否必须
+	Required    bool   `json:"required,omitempty"`    // 是否必须
 }
 
 type SSDocTypeWithKey struct {
-	Key     string  `json:"key"`
-	Default *string `json:"default,omitempty"` // 默认值
-	Json    *string `json:"json,omitempty"`    // json key
-	Require bool    `json:"require,omitempty"` // 是否必须
+	Key      string  `json:"key"`
+	Default  *string `json:"default,omitempty"`  // 默认值
+	Json     *string `json:"json,omitempty"`     // json key
+	Required bool    `json:"required,omitempty"` // 是否必须
 	*SSDocType
 }
 
@@ -120,7 +120,7 @@ func (doc *SSDoc) AddApi(i *DocApi) *SSDoc {
 			header := &SSDocHeader{
 				Name:        h.Name,
 				Description: h.Remark,
-				Require:     h.Require,
+				Required:    h.Required,
 			}
 			api.Header = append(api.Header, header)
 		}
@@ -214,8 +214,13 @@ func parseType(t *TypeSpecWithKey) *SSDocTypeWithKey {
 		for _, t := range t.Value {
 			a := parseType(t)
 			if t.Tags != nil {
-				if tag, _ := t.Tags.Get("require"); tag != nil && tag.Name == "true" {
-					a.Require = true
+				if tag, _ := t.Tags.Get("binding"); tag != nil {
+					opt := append(tag.Options, tag.Name)
+					for _, o := range opt {
+						if o == "required" {
+							a.Required = true
+						}
+					}
 				}
 				if tag, _ := t.Tags.Get("default"); tag != nil {
 					a.Default = &tag.Name

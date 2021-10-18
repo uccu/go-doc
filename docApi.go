@@ -16,7 +16,7 @@ import (
 // @Method				post[,get]
 // @Tag					tag[,tag]
 // @Accept				json
-// @Header...			KEY require 备注
+// @Header...			KEY required 备注
 // @Rest				Struct
 // @Body				Struct
 // @Success...			code KEY Struct
@@ -40,9 +40,9 @@ type DocApi struct {
 }
 
 type DocHeader struct {
-	Name    string
-	Require bool
-	Remark  string
+	Name     string
+	Required bool
+	Remark   string
 }
 
 type DocRet struct {
@@ -70,9 +70,7 @@ func (doc *DocApi) ParseComment(comment string) bool {
 	switch typ {
 	case "Summary":
 		return doc.ParseSummary(commentPieces)
-	case "Description":
-		return doc.ParseDescription(commentPieces)
-	case "Desc":
+	case "Desc", "Description":
 		return doc.ParseDescription(commentPieces)
 	case "Category":
 		return doc.ParseCategory(commentPieces)
@@ -84,7 +82,7 @@ func (doc *DocApi) ParseComment(comment string) bool {
 		return doc.ParseServer(commentPieces)
 	case "Method":
 		return doc.ParseMethod(commentPieces)
-	case "Tag":
+	case "Tag", "Tags":
 		return doc.ParseTag(commentPieces)
 	case "Accept":
 		return doc.ParseAccept(commentPieces)
@@ -176,7 +174,7 @@ func (doc *DocApi) ParseHeader(s []string) bool {
 	}
 
 	if s[1] == "true" {
-		docHeader.Require = true
+		docHeader.Required = true
 	}
 
 	if doc.Header == nil {
