@@ -436,31 +436,31 @@
 
                             if (api.header)
                                 for (i of api.header) {
-                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Header</span></div><div class="col-8 val"><span class="badge bg-light text-dark">'
+                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Header</span></div><div class="col-8 val"><p class="code">'
 
                                     if (i.required) {
                                         a += '*'
                                     }
                                     a += i.name
                                     if (i.description) {
-                                        a += '&nbsp;&nbsp;&nbsp;&nbsp;// ' + i.description
+                                        a += '&nbsp;&nbsp;&nbsp;&nbsp;<span class="fw-light remark">// ' + i.description + '</span>'
                                     }
-                                    a += '</span></div></div></li>'
+                                    a += '</p></div></div></li>'
                                 }
                             if (api.rest)
-                                a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Rest</span></div><div class="col-8 val"><p>' + getType(api.rest) + '</p></div></div></li>'
+                                a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Rest</span></div><div class="col-8 val"><p class="code">' + getType(api.rest) + '</p></div></div></li>'
                             if (api.body) {
                                 a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Body</span></div><div class="col-8 val"><p class="code">' + getType(api.body) + '</p></div></div></li>'
                             }
 
                             if (api.success)
                                 for (i of api.success) {
-                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge bg-success">Success</span> <span class="badge bg-secondary">' + i.key + '</span> <span class="badge bg-dark">' + i.code + '</span></div><div class="col-8 val"><p class="code">' + getType(i.value) + '</p></div></div></li>'
+                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge bg-success">Success</span> <span class="badge bg-dark">' + i.code + '</span> <span class="badge bg-secondary">' + i.key + '</span></div><div class="col-8 val"><p class="code">' + getType(i.value) + '</p></div></div></li>'
                                 }
 
                             if (api.fail)
                                 for (i of api.fail) {
-                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge bg-success">Success</span> <span class="badge bg-secondary">' + i.key + '</span> <span class="badge bg-dark">' + i.code + '</span></div><div class="col-8 val"><p class="code">' + getType(i.value) + '</p></div></div></li>'
+                                    a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge bg-success">Success</span> <span class="badge bg-dark">' + i.code + '</span> <span class="badge bg-secondary">' + i.key + '</span></div><div class="col-8 val"><p class="code">' + getType(i.value) + '</p></div></div></li>'
                                 }
 
                             a += '</ul></div></div></div>'
