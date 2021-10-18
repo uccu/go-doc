@@ -29,9 +29,15 @@ func GetPkg(dir string) *Pkg {
 
 	cfg := &packages.Config{Mode: packages.NeedFiles | packages.NeedSyntax}
 	pkgss, err := packages.Load(cfg, dir)
+
 	if err != nil || len(pkgss) == 0 {
 		panic(errors.New("package is not exist: " + dir))
 	}
+
+	if pkgss[0].Errors != nil {
+		panic(pkgss[0].Errors[0])
+	}
+
 	pkg := &Pkg{
 		pkg:  pkgss[0],
 		Name: pkgss[0].Syntax[0].Name.Name,
@@ -79,6 +85,9 @@ func (pkg *Pkg) SetStru() *Pkg {
 			}
 			typeSpec, _ := p.Decl.(*ast.TypeSpec)
 			pkg.stru[typeSpec.Name.Name] = ParseTypeSpec(typeSpec, pkg)
+			if pkg.stru[typeSpec.Name.Name] == nil {
+				continue
+			}
 			pkg.stru[typeSpec.Name.Name].Name = typeSpec.Name.Name
 		}
 	}
@@ -98,17 +107,17 @@ func GetApis(pacakges ...string) []*DocApi {
 	for _, p := range pacakges {
 		pkg := GetPkg(p)
 		for _, f := range pkg.pkg.Syntax {
-			for _, f := range f.Scope.Objects {
-				if f.Kind == ast.Fun {
-
-					funcDecl, ok := f.Decl.(*ast.FuncDecl)
-					if !ok {
-						continue
-					}
-					api := NewDocApi(funcDecl.Doc, pkg)
-					if api != nil {
-						apis = append(apis, api)
-					}
+			for _, f := range f.Decls {
+				funcDecl, ok := f.(*ast.FuncDecl)
+				if !ok {
+					continue
+				}
+				if funcDecl.Doc == nil {
+					continue
+				}
+				api := NewDocApi(funcDecl.Doc, pkg)
+				if api != nil {
+					apis = append(apis, api)
 				}
 			}
 		}

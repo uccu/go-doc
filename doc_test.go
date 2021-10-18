@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"path"
+	"runtime"
 	"testing"
 	"text/template"
 
@@ -59,4 +61,16 @@ func TestJson(t *testing.T) {
 	fmt.Println("doc addr : http://127.0.0.1:7000/index.html")
 	fmt.Println("json addr : http://127.0.0.1:7000/doc.json")
 	http.ListenAndServe(":7000", nil)
+}
+
+func TestTTT(t *testing.T) {
+
+	_, file, _, ok := runtime.Caller(0)
+	if ok {
+		fmt.Println(path.Dir(file) + "/index.html")
+		t, _ := template.New("index.html").ParseFiles(path.Dir(file) + "/index.html")
+
+		fmt.Println(t)
+
+	}
 }

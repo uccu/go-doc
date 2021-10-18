@@ -2,7 +2,6 @@ package doc
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"path"
 	"runtime"
@@ -15,6 +14,14 @@ type doc struct {
 	def   string
 }
 
+type DocConf struct {
+	SSDocInfo SSDocInfo
+	Server    map[SSDocServerId]*SSDocServer
+	Pkgs      []string
+	Url       string
+	Name      string
+}
+
 func (d *doc) Json(w http.ResponseWriter) *doc {
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Write(d.j)
@@ -22,23 +29,22 @@ func (d *doc) Json(w http.ResponseWriter) *doc {
 }
 
 func (d *doc) Html(w http.ResponseWriter) *doc {
-	_, file, _, ok := runtime.Caller(1)
+	_, file, _, ok := runtime.Caller(0)
 	if ok {
-		index, _ := ioutil.ReadFile(path.Dir(file) + "/index.html")
-		t, _ := template.New("index.html").ParseFiles(string(index))
+		t, _ := template.New("index.html").ParseFiles(path.Dir(file) + "/index.html")
 		t.Execute(w, d.def)
 	}
 	return d
 }
 
-func New(i SSDocInfo, m map[SSDocServerId]*SSDocServer, pkgs []string, def string) *doc {
+func New(c DocConf) *doc {
 	doc := &doc{
-		ssdoc: NewSSDoc(i, m),
+		ssdoc: NewSSDoc(c.SSDocInfo, c.Server),
 		j:     make([]byte, 0),
-		def:   def,
+		def:   c.Url,
 	}
-	for _, v := range pkgs {
-		doc.ssdoc.AddPacakges(v)
+	for _, v := range c.Pkgs {
+		doc.ssdoc.AddPacakges(c.Name, v)
 	}
 	doc.j, _ = json.Marshal(doc.ssdoc)
 	return doc
