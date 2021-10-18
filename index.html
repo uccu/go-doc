@@ -323,10 +323,15 @@
 
                 if (m === "[name]") {
                     add()
+                    let name = ''
                     if (tt && tt.required || t.required) {
-                        str += '*'
+                        name += '*'
                     }
-                    str += ((tt ? tt.json : '') || t.json || t.key) + ": "
+                    name += ((tt ? tt.json : '') || t.json || t.key)
+
+                    if (name) {
+                        str += name + ": "
+                    }
                 } else if (m !== null) {
                     str += m
                 } else {
