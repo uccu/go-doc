@@ -391,7 +391,7 @@
             j('.export').click(function() {
                 let url = j('.jsonInput').val()
                 j.getJSON(url, function(data) {
-                    let k = 0
+                    let cid = 0
                     j('.server').html('')
                     j('.category-box').html('')
 
@@ -416,16 +416,16 @@
                     for (i in data.apis) {
                         let apis = data.apis[i]
 
-                        let d = '<div class="accordion-item category"><h2 class="accordion-header" id="category-h-' + k + '"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#category-c-' + k + '" aria-expanded="true" aria-controls="category-c-' + k + '">' + i + '</button></h2><div id="category-c-' + k + '" class="accordion-collapse collapse show" aria-labelledby="category-h' + k + '"><div class="accordion-body">'
+                        let d = '<div class="accordion-item category"><h2 class="accordion-header" id="category-h-' + cid + '"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#category-c-' + cid + '" aria-expanded="true" aria-controls="category-c-' + cid + '">' + i + '</button></h2><div id="category-c-' + cid + '" class="accordion-collapse collapse show" aria-labelledby="category-h' + cid + '"><div class="accordion-body">'
 
                         for (k in apis) {
                             let api = apis[k]
 
-                            let a = '<div class="accordion-item api"><h2 class="accordion-header" id="api-h-' + k + '"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#api-c-' + k + '" aria-expanded="true" aria-controls="api-c-' + k + '">'
+                            let a = '<div class="accordion-item api"><h2 class="accordion-header" id="api-h-' + cid + '-' + k + '"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#api-c-' + cid + '-' + k + '" aria-expanded="true" aria-controls="api-c-' + cid + '-' + cid + '-' + k + '">'
 
                             a += '<div class="api-header">' + '<span class="badge bg-success">' + api.method.join("/") + '</span> <span class="badge bg-light text-dark">' + api.path + '</span> <span class="badge text-dark">' + api.name + "</span></div>"
 
-                            a += '</button></h2><div id="api-c-' + k + '" class="accordion-collapse collapse" aria-labelledby="api-h' + k + '"><div class="accordion-body"><ul class="list-group">'
+                            a += '</button></h2><div id="api-c-' + cid + '-' + k + '" class="accordion-collapse collapse" aria-labelledby="api-h' + cid + '-' + k + '"><div class="accordion-body"><ul class="list-group">'
 
                             if (api.server && data.servers && data.servers[api.server])
                                 a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Server</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + data.servers[api.server].url + '</span></div></div></li>'
@@ -459,7 +459,7 @@
 
                         d += '</div></div></div>'
                         j('.category-box').append(d)
-                        k++
+                        cid++
                     }
 
                 })
