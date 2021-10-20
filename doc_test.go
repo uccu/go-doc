@@ -1,13 +1,19 @@
 package doc_test
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"go/parser"
+	"go/token"
 	"net/http"
+	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"testing"
 	"text/template"
+	"time"
 
 	"github.com/uccu/go-doc"
 )
@@ -25,7 +31,7 @@ func TestVV(t *testing.T) {
 		},
 	})
 
-	err := ssdoc.AddPacakges("github.com/uccu/go-doc/test").Export("doc")
+	err := ssdoc.AddPacakges("test").Export("doc")
 	if err != nil {
 		t.Error(err)
 	}
@@ -65,12 +71,41 @@ func TestJson(t *testing.T) {
 
 func TestTTT(t *testing.T) {
 
-	_, file, _, ok := runtime.Caller(0)
-	if ok {
-		fmt.Println(path.Dir(file) + "/index.html")
-		t, _ := template.New("index.html").ParseFiles(path.Dir(file) + "/index.html")
+}
 
-		fmt.Println(t)
+func file(f string) string {
+	_, file, _, _ := runtime.Caller(0)
+	return path.Dir(file) + "/" + f
+}
 
+func TestAst(t *testing.T) {
+
+	fset := token.NewFileSet()
+	// 解析src但在处理导入后停止。
+	f, err := parser.ParseDir(fset, file("doc"), nil, parser.ParseComments)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+
+	// 从文件CAST打印导入。
+	for {
+		time.Sleep(time.Second)
+		fmt.Printf("%p", f)
+	}
+
+}
+
+func TestD(t *testing.T) {
+
+	fmt.Println(filepath.Dir(os.Args[0]) + "/go.mod")
+	f, _ := os.Open(filepath.Dir(os.Args[0]) + "/go.mod")
+	rd := bufio.NewScanner(f)
+	if rd.Scan() {
+		str := []byte(rd.Text())
+		js, _ := json.Marshal(string(str[7:]))
+		fmt.Println(string(js))
+	}
+	f.Close()
+
 }

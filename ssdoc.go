@@ -236,7 +236,12 @@ func parseType(t *TypeSpecWithKey) *SSDocTypeWithKey {
 		}
 	} else if t.Type == TypeType {
 		v := parseTypeType(t.TypeName, t.pkg)
-		typ.Value = []*SSDocTypeWithKey{parseType(v)}
+		if v != nil {
+			typ.Value = []*SSDocTypeWithKey{parseType(v)}
+		} else {
+			typ.Type = CustomType
+		}
+
 	}
 	return typ
 }

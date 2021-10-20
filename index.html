@@ -298,6 +298,7 @@
             let SliceType = 8
             let MapType = 9
             let TypeType = 10
+            let CustomType = 11
 
             function getType(t, n = 0, m = null, tt) {
 
@@ -358,20 +359,25 @@
                     add()
                     return str + '}<br>'
                 }
+                if (t.type === CustomType) {
+                    s('<span class = "text-warning">' + t.typeName + '</span>')
+                    sss()
+                    return str + '<br>'
+                }
                 if (t.type === StructType) {
-                    s('<span class = "text-warning"' + (t.description ? ' data-bs-toggle="tooltip" data-bs-html="true" title="' + t.description + '"' : '') + '>' + t.name + '</span>')
+                    s('<span class = "text-warning">' + t.name + '</span>')
                     if (!t.value) {
                         sss()
                         return str + '<br>'
                     }
 
                     sb('{')
-                    sss()
                     for (v of t.value) {
                         s(getType(v, n + 1, "[name]"))
                     }
                     add()
                     sb('}')
+                    sss()
                     return str
                 }
                 if (t.type === TypeType) {
@@ -429,7 +435,15 @@
 
                             if (api.server && data.servers && data.servers[api.server])
                                 a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Server</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + data.servers[api.server].url + '</span></div></div></li>'
-                            a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Path</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + api.path + '</span></div></div></li>'
+                            a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">'
+
+                            if (api.type === 'ws') {
+                                a += 'Ack'
+                            } else {
+                                a += "Path"
+                            }
+
+                            a += '</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + api.path + '</span></div></div></li>'
 
                             if (api.description)
                                 a += '<li class="list-group-item"><div class="row"><div class="col-4 key"><span class="badge text-dark">Description</span></div><div class="col-8 val"><span class="badge bg-light text-dark">' + api.description + '</span></div></div></li>'

@@ -1,49 +1,84 @@
 package doc
 
 import (
+	"bufio"
 	"errors"
 	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
+	"path/filepath"
 	"strings"
 
-	"golang.org/x/tools/go/packages"
+	"github.com/uccu/go-stringify"
 )
 
 var pkgs map[string]*Pkg
+var pkgMod string
 
 func init() {
 	pkgs = make(map[string]*Pkg)
 }
 
 type Pkg struct {
+	Dir  string
 	Name string
-	pkg  *packages.Package
+	pkg  *ast.Package
 	pkgs map[string]*Pkg
 	stru map[string]*TypeSpec
 }
 
-func GetPkg(dir string) *Pkg {
-	dir = strings.Trim(dir, "\"")
+func setMod() {
+	if pkgMod == "" {
+		f, err := os.Open(filepath.Dir(os.Args[0]) + "/go.mod")
+		if err != nil {
+			panic(err)
+		}
+		rd := bufio.NewScanner(f)
+		if rd.Scan() {
+			pkgMod = string(([]byte(rd.Text()))[7:])
+		} else {
+			panic(errors.New("no mod file"))
+		}
+		f.Close()
+	}
+}
+
+func GetPkg(pkgName string) *Pkg {
+
+	setMod()
+
+	if strings.Index(pkgName, pkgMod) != 0 {
+		return nil
+	}
+
+	pkgName = strings.Replace(pkgName, pkgMod, "", 1)
+	dir := filepath.Dir(os.Args[0]) + pkgName
+
 	if pkg, ok := pkgs[dir]; ok {
 		return pkg
 	}
-
-	cfg := &packages.Config{Mode: packages.NeedFiles | packages.NeedSyntax}
-	pkgss, err := packages.Load(cfg, dir)
-
-	if err != nil || len(pkgss) == 0 {
-		panic(errors.New("package is not exist: " + dir))
+	pkgMap, err := parser.ParseDir(token.NewFileSet(), dir, nil, parser.ParseComments)
+	if err != nil {
+		return nil
 	}
 
-	if pkgss[0].Errors != nil {
-		panic(pkgss[0].Errors[0])
+	for name, pkg := range pkgMap {
+		slp := stringify.ToStringSlice(name, "_")
+		if slp[len(slp)-1] == "test" {
+			continue
+		}
+
+		pkg := &Pkg{
+			pkg:  pkg,
+			Name: pkg.Name,
+		}
+
+		pkgs[dir] = pkg
+		return pkg
 	}
 
-	pkg := &Pkg{
-		pkg:  pkgss[0],
-		Name: pkgss[0].Syntax[0].Name.Name,
-	}
-	pkgs[dir] = pkg
-	return pkg
+	return nil
 }
 
 func (pkg *Pkg) SetPkgs() *Pkg {
@@ -51,9 +86,13 @@ func (pkg *Pkg) SetPkgs() *Pkg {
 		return pkg
 	}
 	pkg.pkgs = make(map[string]*Pkg)
-	for _, f := range pkg.pkg.Syntax {
+	for _, f := range pkg.pkg.Files {
 		for _, p := range f.Imports {
-			mpkg := GetPkg(p.Path.Value)
+			pkgName := strings.Trim(p.Path.Value, "\"")
+			mpkg := GetPkg(pkgName)
+			if mpkg == nil {
+				continue
+			}
 			name := mpkg.Name
 			if p.Name != nil {
 				name = p.Name.Name
@@ -78,7 +117,7 @@ func (pkg *Pkg) SetStru() *Pkg {
 	}
 
 	pkg.stru = make(map[string]*TypeSpec)
-	for _, f := range pkg.pkg.Syntax {
+	for _, f := range pkg.pkg.Files {
 		for _, p := range f.Scope.Objects {
 			if p.Kind != ast.Typ {
 				continue
@@ -106,7 +145,10 @@ func GetApis(pacakges ...string) []*DocApi {
 	apis := []*DocApi{}
 	for _, p := range pacakges {
 		pkg := GetPkg(p)
-		for _, f := range pkg.pkg.Syntax {
+		if pkg == nil {
+			continue
+		}
+		for _, f := range pkg.pkg.Files {
 			for _, f := range f.Decls {
 				funcDecl, ok := f.(*ast.FuncDecl)
 				if !ok {

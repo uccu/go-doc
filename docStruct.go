@@ -1,14 +1,12 @@
 package doc
 
 import (
-	"errors"
 	"go/ast"
 	"reflect"
 	"strings"
 
 	"github.com/fatih/structtag"
 	"github.com/uccu/go-stringify"
-	"golang.org/x/tools/go/packages"
 )
 
 type Type int
@@ -307,23 +305,4 @@ func parseTypeType(typeName string, pkg *Pkg) *TypeSpecWithKey {
 		return nil
 	}
 	return &TypeSpecWithKey{TypeSpec: ts}
-}
-
-func GetType(dir string) *Pkg {
-	dir = strings.Trim(dir, "\"")
-	if pkg, ok := pkgs[dir]; ok {
-		return pkg
-	}
-
-	cfg := &packages.Config{Mode: packages.NeedFiles | packages.NeedSyntax}
-	pkgss, err := packages.Load(cfg, dir)
-	if err != nil || len(pkgss) == 0 {
-		panic(errors.New("package is not exist: " + dir))
-	}
-	pkg := &Pkg{
-		pkg:  pkgss[0],
-		Name: pkgss[0].Syntax[0].Name.Name,
-	}
-	pkgs[dir] = pkg
-	return pkg
 }

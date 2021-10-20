@@ -5,5 +5,4 @@ go 1.14
 require (
 	github.com/fatih/structtag v1.2.0
 	github.com/uccu/go-stringify v0.4.3
-	golang.org/x/tools v0.1.7
 )
