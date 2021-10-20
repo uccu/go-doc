@@ -7,7 +7,6 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/uccu/go-stringify"
@@ -30,7 +29,8 @@ type Pkg struct {
 
 func setMod() {
 	if pkgMod == "" {
-		f, err := os.Open(filepath.Dir(os.Args[0]) + "/go.mod")
+		base, _ := os.Getwd()
+		f, err := os.Open(base + "/go.mod")
 		if err != nil {
 			panic(err)
 		}
@@ -53,7 +53,8 @@ func GetPkg(pkgName string) *Pkg {
 	}
 
 	pkgName = strings.Replace(pkgName, pkgMod, "", 1)
-	dir := filepath.Dir(os.Args[0]) + pkgName
+	base, _ := os.Getwd()
+	dir := base + pkgName
 
 	if pkg, ok := pkgs[dir]; ok {
 		return pkg

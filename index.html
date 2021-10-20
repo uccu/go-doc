@@ -371,13 +371,15 @@
                         return str + '<br>'
                     }
 
-                    sb('{')
+                    s('{')
+                    sss()
+                    sb()
                     for (v of t.value) {
                         s(getType(v, n + 1, "[name]"))
                     }
                     add()
                     sb('}')
-                    sss()
+
                     return str
                 }
                 if (t.type === TypeType) {

@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 	"runtime"
 	"testing"
 	"text/template"
@@ -98,8 +97,8 @@ func TestAst(t *testing.T) {
 
 func TestD(t *testing.T) {
 
-	fmt.Println(filepath.Dir(os.Args[0]) + "/go.mod")
-	f, _ := os.Open(filepath.Dir(os.Args[0]) + "/go.mod")
+	base, _ := os.Getwd()
+	f, _ := os.Open(base + "/go.mod")
 	rd := bufio.NewScanner(f)
 	if rd.Scan() {
 		str := []byte(rd.Text())
