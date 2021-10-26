@@ -70,9 +70,9 @@ type SSDocType struct {
 }
 
 type SSDocRet struct {
-	Code  int16             `json:"code,omitempty"`
-	Key   string            `json:"key,omitempty"`
-	Value *SSDocTypeWithKey `json:"value,omitempty"`
+	Code  int16             `json:"code"`
+	Key   string            `json:"key"`
+	Value *SSDocTypeWithKey `json:"value"`
 }
 
 func NewSSDoc(info SSDocInfo, servers map[SSDocServerId]*SSDocServer) *SSDoc {
