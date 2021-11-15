@@ -23,7 +23,6 @@ type DocConf struct {
 }
 
 func (d *doc) Json(w http.ResponseWriter) *doc {
-	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Write(d.j)
 	return d
 }

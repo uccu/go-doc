@@ -259,7 +259,10 @@ func (doc *DocApi) ParseSummary(s []string) bool {
 
 func (doc *DocApi) ParseDescription(s []string) bool {
 	if len(s) > 0 {
-		doc.Description = s[0]
+		doc.Description = ""
+		for _, d := range s {
+			doc.Description += d
+		}
 		return true
 	}
 	return false

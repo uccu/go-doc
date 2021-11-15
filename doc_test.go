@@ -55,7 +55,6 @@ func TestJson(t *testing.T) {
 	j := "http://127.0.0.1:7000/doc.json"
 
 	http.HandleFunc("/doc.json", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Access-Control-Allow-Origin", "*")
 		w.Write([]byte(str))
 	})
 	http.HandleFunc("/index.html", func(w http.ResponseWriter, r *http.Request) {
