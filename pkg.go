@@ -23,7 +23,7 @@ type Pkg struct {
 	Dir  string
 	Name string
 	pkg  *ast.Package
-	pkgs map[string]*Pkg
+	pkgs map[string]map[string]*Pkg
 	stru map[string]*TypeSpec
 }
 
@@ -86,8 +86,9 @@ func (pkg *Pkg) SetPkgs() *Pkg {
 	if pkg.pkgs != nil {
 		return pkg
 	}
-	pkg.pkgs = make(map[string]*Pkg)
-	for _, f := range pkg.pkg.Files {
+	pkg.pkgs = make(map[string]map[string]*Pkg)
+	for file, f := range pkg.pkg.Files {
+		pkg.pkgs[file] = make(map[string]*Pkg)
 		for _, p := range f.Imports {
 			pkgName := strings.Trim(p.Path.Value, "\"")
 			mpkg := GetPkg(pkgName)
@@ -98,14 +99,19 @@ func (pkg *Pkg) SetPkgs() *Pkg {
 			if p.Name != nil {
 				name = p.Name.Name
 			}
-			pkg.pkgs[name] = mpkg
+			pkg.pkgs[file][name] = mpkg
 		}
 	}
 	return pkg
 }
 
-func (pkg *Pkg) GetPkg(name string) *Pkg {
-	p, ok := pkg.SetPkgs().pkgs[name]
+func (pkg *Pkg) GetPkg(file, name string) *Pkg {
+	f, ok := pkg.SetPkgs().pkgs[file]
+	if !ok {
+		return nil
+	}
+
+	p, ok := f[name]
 	if !ok {
 		return nil
 	}
@@ -118,13 +124,13 @@ func (pkg *Pkg) SetStru() *Pkg {
 	}
 
 	pkg.stru = make(map[string]*TypeSpec)
-	for _, f := range pkg.pkg.Files {
+	for file, f := range pkg.pkg.Files {
 		for _, p := range f.Scope.Objects {
 			if p.Kind != ast.Typ {
 				continue
 			}
 			typeSpec, _ := p.Decl.(*ast.TypeSpec)
-			pkg.stru[typeSpec.Name.Name] = ParseTypeSpec(typeSpec, pkg)
+			pkg.stru[typeSpec.Name.Name] = ParseTypeSpec(typeSpec, pkg, file)
 			if pkg.stru[typeSpec.Name.Name] == nil {
 				continue
 			}
@@ -149,7 +155,7 @@ func GetApis(pacakges ...string) []*DocApi {
 		if pkg == nil {
 			continue
 		}
-		for _, f := range pkg.pkg.Files {
+		for file, f := range pkg.pkg.Files {
 			for _, f := range f.Decls {
 				funcDecl, ok := f.(*ast.FuncDecl)
 				if !ok {
@@ -158,7 +164,7 @@ func GetApis(pacakges ...string) []*DocApi {
 				if funcDecl.Doc == nil {
 					continue
 				}
-				api := NewDocApi(funcDecl.Doc, pkg)
+				api := NewDocApi(funcDecl.Doc, pkg, file)
 				if api != nil {
 					apis = append(apis, api)
 				}

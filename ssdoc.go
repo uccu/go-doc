@@ -235,7 +235,7 @@ func parseType(t *TypeSpecWithKey) *SSDocTypeWithKey {
 			typ.Value = append(typ.Value, a)
 		}
 	} else if t.Type == TypeType {
-		v := parseTypeType(t.TypeName, t.pkg)
+		v := parseTypeType(t.TypeName, t.pkg, t.file)
 		if v != nil {
 			typ.Value = []*SSDocTypeWithKey{parseType(v)}
 		} else {

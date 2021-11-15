@@ -37,6 +37,7 @@ type DocApi struct {
 	Success     []*DocRet        `json:"success,omitempty"`
 	Fail        []*DocRet        `json:"fail,omitempty"`
 	pkg         *Pkg             `json:"-"`
+	file        string           `json:"-"`
 }
 
 type DocHeader struct {
@@ -106,7 +107,7 @@ func (doc *DocApi) ParseSuccess(s []string) bool {
 		return false
 	}
 
-	stru := parseTypeType(s[2], doc.pkg)
+	stru := parseTypeType(s[2], doc.pkg, doc.file)
 	if stru == nil {
 		return false
 	}
@@ -129,7 +130,7 @@ func (doc *DocApi) ParseFail(s []string) bool {
 		return false
 	}
 
-	stru := parseTypeType(s[2], doc.pkg)
+	stru := parseTypeType(s[2], doc.pkg, doc.file)
 	if stru == nil {
 		return false
 	}
@@ -151,7 +152,7 @@ func (doc *DocApi) ParseBody(s []string) bool {
 	if len(s) == 0 {
 		return false
 	}
-	doc.Body = parseTypeType(s[0], doc.pkg)
+	doc.Body = parseTypeType(s[0], doc.pkg, doc.file)
 	return doc.Body != nil
 }
 
@@ -159,7 +160,7 @@ func (doc *DocApi) ParseRest(s []string) bool {
 	if len(s) == 0 {
 		return false
 	}
-	doc.Rest = parseTypeType(s[0], doc.pkg)
+	doc.Rest = parseTypeType(s[0], doc.pkg, doc.file)
 	return doc.Rest != nil
 }
 
@@ -272,7 +273,7 @@ func (doc *DocApi) ParseCategory(s []string) bool {
 	return false
 }
 
-func NewDocApi(comments *ast.CommentGroup, pkg *Pkg) *DocApi {
+func NewDocApi(comments *ast.CommentGroup, pkg *Pkg, file string) *DocApi {
 	if comments == nil {
 		return nil
 	}
@@ -282,6 +283,7 @@ func NewDocApi(comments *ast.CommentGroup, pkg *Pkg) *DocApi {
 		Method: []string{"post"},
 		Type:   "http",
 		pkg:    pkg,
+		file:   file,
 	}
 
 	for _, v := range comments.List {

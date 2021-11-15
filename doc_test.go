@@ -48,7 +48,7 @@ func TestJson(t *testing.T) {
 			Description: "本地接口文档",
 		},
 	})
-	ssdoc.AddPacakges("github.com/uccu/go-doc/test")
+	ssdoc.AddPacakges("github.com/uccu/go-doc/test/user")
 
 	str, _ := json.Marshal(ssdoc)
 

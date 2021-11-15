@@ -87,6 +87,7 @@ type TypeSpec struct {
 	Type     Type
 	Value    []*TypeSpecWithKey
 	pkg      *Pkg
+	file     string
 	Doc      []string
 	Comment  string
 }
@@ -114,8 +115,8 @@ func (ts *TypeSpec) GetStru(name string) *TypeSpec {
 	return nil
 }
 
-func ParseTypeSpec(t *ast.TypeSpec, pkg *Pkg) *TypeSpec {
-	ts := ParseType(t.Type, pkg)
+func ParseTypeSpec(t *ast.TypeSpec, pkg *Pkg, file string) *TypeSpec {
+	ts := ParseType(t.Type, pkg, file)
 	if ts == nil {
 		return ts
 	}
@@ -132,8 +133,8 @@ func ParseTypeSpec(t *ast.TypeSpec, pkg *Pkg) *TypeSpec {
 	return ts
 }
 
-func parseField(f *ast.Field, pkg *Pkg) *TypeSpec {
-	ts := ParseType(f.Type, pkg)
+func parseField(f *ast.Field, pkg *Pkg, file string) *TypeSpec {
+	ts := ParseType(f.Type, pkg, file)
 	if ts == nil {
 		return ts
 	}
@@ -150,10 +151,11 @@ func parseField(f *ast.Field, pkg *Pkg) *TypeSpec {
 	return ts
 }
 
-func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
+func ParseType(t ast.Expr, pkg *Pkg, file string) *TypeSpec {
 	reflectType := reflect.TypeOf(t).Elem()
 
 	typeSpec := &TypeSpec{
+		file: file,
 		pkg:  pkg,
 		Kind: reflectType.Kind(),
 	}
@@ -170,7 +172,7 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 		list := []*TypeSpecWithKey{}
 
 		for _, f := range s.Fields.List {
-			field := parseField(f, pkg)
+			field := parseField(f, pkg, file)
 			if field == nil {
 				continue
 			}
@@ -205,7 +207,7 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 		}
 		typeSpec.Type = SliceType
 
-		field := ParseType(arr.Elt, pkg)
+		field := ParseType(arr.Elt, pkg, file)
 		if field == nil {
 			return nil
 		}
@@ -218,8 +220,8 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 			return nil
 		}
 		typeSpec.Type = MapType
-		key := ParseType(arr.Key, pkg)
-		val := ParseType(arr.Value, pkg)
+		key := ParseType(arr.Key, pkg, file)
+		val := ParseType(arr.Value, pkg, file)
 		if key == nil || val == nil {
 			return nil
 		}
@@ -235,7 +237,7 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 		typeSpec.TypeName = "any"
 		return typeSpec
 	case "StarExpr":
-		return ParseType(t.(*ast.StarExpr).X, pkg)
+		return ParseType(t.(*ast.StarExpr).X, pkg, file)
 	case "SelectorExpr":
 		expr := t.(*ast.SelectorExpr)
 		ident := expr.X.(*ast.Ident)
@@ -280,7 +282,7 @@ func ParseType(t ast.Expr, pkg *Pkg) *TypeSpec {
 
 }
 
-func parseTypeType(typeName string, pkg *Pkg) *TypeSpecWithKey {
+func parseTypeType(typeName string, pkg *Pkg, file string) *TypeSpecWithKey {
 
 	paths := stringify.ToStringSlice(typeName, ".")
 	if len(paths) == 0 {
@@ -295,7 +297,7 @@ func parseTypeType(typeName string, pkg *Pkg) *TypeSpecWithKey {
 		return &TypeSpecWithKey{TypeSpec: ts}
 	}
 
-	pkg = pkg.GetPkg(paths[0])
+	pkg = pkg.GetPkg(file, paths[0])
 	if pkg == nil {
 		return nil
 	}
